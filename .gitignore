@@ -8,3 +8,5 @@ temp/
 
 # Mina
 .env
+dist/
+test.http
