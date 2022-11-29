@@ -1,11 +1,32 @@
-import { Request } from "express";
+import { Request, Response } from "express";
 import { User } from "../entities/User";
 import { AppDataSource, TestDataSource } from "../data-source";
-import { hash } from "argon2";
+import { hash, verify } from "argon2";
+import session from "express-session";
 
-interface UserResponse {
-	email: string;
-	password: string;
+interface CustomError {
+	value: string;
+	msg: string;
+	param: string;
+	location: string;
+}
+
+interface ErrorResponse {
+	errors?: CustomError[];
+}
+
+interface RegisterRequest extends Request {
+	body: {
+		email: string;
+		password: string;
+	};
+}
+
+interface LoginRequest extends RegisterRequest {
+	session: session.Session &
+		Partial<session.SessionData> & {
+			userId: number;
+		};
 }
 
 export class UserController {
@@ -14,38 +35,83 @@ export class UserController {
 			? TestDataSource.getRepository(User)
 			: AppDataSource.getRepository(User);
 
-	async all() {
-		return this.userRepository.find();
-	}
+	async register(
+		req: RegisterRequest,
+		res: Response
+	): Promise<ErrorResponse | boolean> {
+		const { email, password } = req.body;
 
-	async one(req: Request) {
-		const id = parseInt(req.params.id);
-		return this.userRepository.findOne({ where: { id } });
-	}
+		const user = await this.userRepository.findOne({
+			where: {
+				email,
+			},
+		});
 
-	async register(req: Request): Promise<UserResponse> {
-		const { email, password, fullName } = req.body;
+		if (user) {
+			res.status(400);
+			return {
+				errors: [
+					{
+						value: email,
+						msg: "Email already exists",
+						param: "email",
+						location: "body",
+					},
+				],
+			};
+		}
 
 		const hashedPassword = await hash(password);
-		const user = this.userRepository.save({
+		await this.userRepository.insert({
 			email,
 			password: hashedPassword,
-			fullName,
 		});
-
-		return user;
+		res.status(201);
+		return true;
 	}
 
-	// async login(req: Request) {
+	async login(
+		req: LoginRequest,
+		res: Response
+	): Promise<ErrorResponse | boolean> {
+		const { email, password } = req.body;
 
-	// }
-
-	async remove(req: Request) {
-		const { id } = req.params;
-		const userToRemove = await this.userRepository.findOneBy({
-			id: parseInt(id),
+		const user = await this.userRepository.findOne({
+			where: {
+				email,
+			},
 		});
-		if (!userToRemove) throw Error("User does not exist");
-		await this.userRepository.remove(userToRemove);
+
+		if (!user) {
+			res.status(404);
+			return {
+				errors: [
+					{
+						value: email,
+						msg: "Email is not registered",
+						param: "email",
+						location: "body",
+					},
+				],
+			};
+		}
+
+		const valid = await verify(user.password, password);
+		if (!valid) {
+			res.status(400);
+			return {
+				errors: [
+					{
+						value: password,
+						msg: "Wrong Password",
+						param: "password",
+						location: "body",
+					},
+				],
+			};
+		}
+
+		req.session.userId = user.id;
+		return true;
 	}
 }

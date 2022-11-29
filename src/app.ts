@@ -2,6 +2,9 @@ import express, { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import morgan from "morgan";
 import { Routes } from "./routes";
+import redis from "ioredis";
+import session from "express-session";
+import connectRedis from "connect-redis";
 
 interface ResponseError extends Error {
 	statusCode?: number;
@@ -11,8 +14,31 @@ const handleError = (err: ResponseError, _req: Request, res: Response) => {
 };
 
 const app = express();
+
+const RedisStore = connectRedis(session);
+const redisClient = redis.createClient();
+
 app.use(morgan("tiny"));
 app.use(express.json());
+
+app.use(
+	session({
+		name: "sid",
+		store: new RedisStore({
+			client: redisClient,
+			disableTouch: true,
+		}),
+		cookie: {
+			maxAge: 1000 * 60 * 60 * 24 * 365, // one year
+			httpOnly: true,
+			secure: false, // TODO: Change to true in prod
+			// sameSite: "lax",
+		},
+		saveUninitialized: false,
+		secret: "mmm",
+		resave: false,
+	})
+);
 
 // Main Endpoint
 app.get("/", (_, res: Response) => {
