@@ -1,10 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import {
+	Entity,
+	PrimaryGeneratedColumn,
+	Column,
+	JoinColumn,
+	OneToOne,
+} from "typeorm";
+import { Egyptian } from "./Egyptian";
+import { NonEgyptian } from "./NonEgyptian";
 
 // prettier-ignore
 @Entity("users")
 export class User {
 	@PrimaryGeneratedColumn()
-		id: number;
+		userId: number;
 
 	@Column({ unique: true })
 		email: string;
@@ -14,5 +22,19 @@ export class User {
 
 	@Column({ nullable: true })
 		fullName: string;
+
+	@Column({ nullable: true })
+		egyptian: boolean;
+	
+	@Column({ default: false })
+		active: boolean;
+	
+	@OneToOne(() => Egyptian, (egyptian) => egyptian.user, { cascade: true })
+	@JoinColumn()
+		egyptianInfo: Egyptian;
+
+	@OneToOne(() => NonEgyptian, (nonEgyptian) => nonEgyptian.user, { cascade: true })
+	@JoinColumn()
+		nonEgyptianInfo: NonEgyptian;
 
 }

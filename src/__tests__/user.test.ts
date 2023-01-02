@@ -26,6 +26,7 @@ let testUser: TestUser;
 
 const registerRoute = "/register";
 const loginRoute = "/login";
+// const logoutRoute = "/logout";
 
 describe("User", () => {
 	describe("POST /register", () => {
@@ -198,7 +199,7 @@ describe("User", () => {
 				.send(testUser);
 
 			expect(statusCode).toEqual(200);
-			expect(body).toBe(true);
+			expect(body).toEqual({ email: "test@test.com", id: 1 });
 			expect(header["set-cookie"][0]).toContain("sid=");
 		});
 	});

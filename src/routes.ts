@@ -9,6 +9,7 @@ interface Route {
 	controller: typeof UserController;
 	action: string;
 	validation: ValidationChain[];
+	isAuth?: boolean;
 }
 
 export const Routes: Route[] = [
@@ -34,8 +35,32 @@ export const Routes: Route[] = [
 				.withMessage("Invalid Password"),
 		],
 	},
+	{
+		method: "get",
+		route: "/logout",
+		controller: UserController,
+		action: "logout",
+		validation: [],
+	},
+	{
+		method: "post",
+		route: "/active-account",
+		controller: UserController,
+		action: "activeAccount",
+		validation: [
+			body("fullName").isLength({ min: 10 }).withMessage("Invalid Name"),
+			body("phoneNumber")
+				.isNumeric().withMessage("Invalid Phone Number")
+				.isLength({ min: 11, max: 11 })
+				.withMessage("Short Phone Number"),
+			body("nationalID")
+				.isNumeric()
+				.isLength({ min: 14, max: 14 })
+				.withMessage("Short National ID"),
+		],
+		isAuth: true,
+	},
 ];
-
 // export const Routes = [
 // 	{
 // 		method: "get",

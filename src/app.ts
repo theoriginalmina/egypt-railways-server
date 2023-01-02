@@ -5,6 +5,10 @@ import { Routes } from "./routes";
 import redis from "ioredis";
 import session from "express-session";
 import connectRedis from "connect-redis";
+import cors from "cors";
+import { cors_origin } from "./config";
+import { isAuth } from "./middlewares/isAuth";
+import { ExpressRequest } from "./interfaces";
 
 interface ResponseError extends Error {
 	statusCode?: number;
@@ -18,9 +22,17 @@ const app = express();
 const RedisStore = connectRedis(session);
 const redisClient = redis.createClient();
 
+// Middlewares
 app.use(morgan("tiny"));
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
+app.set("trust proxy", 1);
+app.use(
+	cors({
+		origin: cors_origin,
+		credentials: true,
+	})
+);
 app.use(
 	session({
 		name: "sid",
@@ -32,7 +44,7 @@ app.use(
 			maxAge: 1000 * 60 * 60 * 24 * 365, // one year
 			httpOnly: true,
 			secure: false, // TODO: Change to true in prod
-			// sameSite: "lax",
+			sameSite: "lax",
 		},
 		saveUninitialized: false,
 		secret: "mmm",
@@ -50,7 +62,17 @@ Routes.forEach((route) => {
 	(app as any)[route.method](
 		route.route,
 		...route.validation,
-		async (req: Request, res: Response, next: NextFunction) => {
+		async (req: ExpressRequest, res: Response, next: NextFunction) => {
+			if (route.isAuth) {
+				const auth = isAuth(req);
+				if (!auth) {
+					return res.status(401).json({
+						errors: {
+							message: "Not Authenticated",
+						},
+					});
+				}
+			}
 			try {
 				const errors = validationResult(req);
 				if (!errors.isEmpty()) {

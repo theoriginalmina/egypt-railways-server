@@ -1,4 +1,4 @@
-# Typeorm
+# Typeorm's
 .idea/
 .vscode/
 node_modules/
@@ -6,7 +6,8 @@ build/
 tmp/
 temp/
 
-# Mina
+# Mina's
 .env
 dist/
 test.http
+coverage/

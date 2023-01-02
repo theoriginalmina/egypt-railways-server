@@ -10,3 +10,5 @@ export const test_db_user = process.env.TEST_DB_USERNAME;
 export const test_db_pass = process.env.TEST_DB_PASSWORD;
 
 export const db_host = process.env.DB_HOST;
+
+export const cors_origin = process.env.CORS_ORIGIN;

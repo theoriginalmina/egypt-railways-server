@@ -9,6 +9,8 @@ import {
 	test_db_pass,
 	test_db_user,
 } from "./config";
+import { Egyptian } from "./entities/Egyptian";
+import { NonEgyptian } from "./entities/NonEgyptian";
 import { User } from "./entities/User";
 
 export const AppDataSource = new DataSource({
@@ -20,7 +22,7 @@ export const AppDataSource = new DataSource({
 	database: dev_db_name,
 	synchronize: true,
 	logging: true,
-	entities: [User],
+	entities: [User, Egyptian, NonEgyptian],
 	subscribers: [],
 	migrations: [],
 });
@@ -34,5 +36,5 @@ export const TestDataSource = new DataSource({
 	database: test_db_name,
 	synchronize: true,
 	logging: false,
-	entities: [User],
+	entities: [User, Egyptian],
 });
