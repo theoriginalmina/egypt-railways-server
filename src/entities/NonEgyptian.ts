@@ -2,7 +2,7 @@ import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "./User";
 
 // prettier-ignore
-@Entity("non-egyptians")
+@Entity("nonEgyptians")
 export class NonEgyptian {
 	@PrimaryGeneratedColumn()
 		id: number;
@@ -10,8 +10,8 @@ export class NonEgyptian {
 	@Column()
 		phoneNumber: string;
 
-    @Column()
-    	passportNumber: string;
+	@Column()
+		passportNumber: string;
 	
 	@OneToOne(() => User, (user) => user.nonEgyptianInfo)
 		user: User;

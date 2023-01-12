@@ -6,9 +6,10 @@ import {
 	ActiveAccountRequest,
 	ActiveAccountResponed,
 	Failed,
-	LoginRequest,
 	LoginSucceeded,
-	RegisterRequest,
+	UserRequest,
+	VerifySessionRequest,
+	VerifySessionResponed,
 } from "../interfaces";
 import { Egyptian } from "../entities/Egyptian";
 import { NonEgyptian } from "../entities/NonEgyptian";
@@ -19,15 +20,10 @@ export class UserController {
 			? TestDataSource.getRepository(User)
 			: AppDataSource.getRepository(User);
 
-	// private egyptianRepository =
-	// 	process.env.NODE_ENV === "test"
-	// 		? TestDataSource.getRepository(Egyptian)
-	// 		: AppDataSource.getRepository(Egyptian);
-
-	async register(
-		req: RegisterRequest,
+	register = async (
+		req: UserRequest,
 		res: Response
-	): Promise<Failed | boolean> {
+	): Promise<boolean | Failed> => {
 		const { email, password } = req.body;
 
 		const user = await this.userRepository.findOne({
@@ -50,19 +46,32 @@ export class UserController {
 			};
 		}
 		const hashedPassword = await hash(password);
-
-		await this.userRepository.insert({
-			email,
-			password: hashedPassword,
-		});
+		let registeredUser;
+		try {
+			registeredUser = await this.userRepository.insert({
+				email,
+				password: hashedPassword,
+			});
+		} catch (err) {
+			return {
+				errors: [
+					{
+						msg: err.message,
+					},
+				],
+			};
+		}
+		req.session.userId = registeredUser.raw[0].userId;
+		req.session.email = email;
+		req.session.active = false;
 		res.status(201);
 		return true;
-	}
+	};
 
-	async login(
-		req: LoginRequest,
+	login = async (
+		req: UserRequest,
 		res: Response
-	): Promise<LoginSucceeded | Failed> {
+	): Promise<LoginSucceeded | Failed> => {
 		const { email, password } = req.body;
 
 		const user = await this.userRepository.findOne({
@@ -102,26 +111,28 @@ export class UserController {
 
 		req.session.userId = user.userId;
 		req.session.email = user.email;
+		req.session.active = user.active;
 		return {
 			id: user.userId,
 			email: user.email,
 			active: user.active,
+			sessionId: req.session.id,
 		};
-	}
+	};
 
-	logout(req: LoginRequest, res: Response) {
+	logout = (req: UserRequest, res: Response) => {
 		if (req.session.userId) {
 			res.clearCookie("sid");
 			req.session.destroy((err) => {
 				return err;
 			});
 		}
-	}
+	};
 
-	async activeAccount(
+	activeAccount = async (
 		req: ActiveAccountRequest,
 		res: Response
-	): Promise<Failed | ActiveAccountResponed> {
+	): Promise<ActiveAccountResponed | Failed> => {
 		const { email } = req.session;
 		const user = await this.userRepository.findOne({
 			where: { email },
@@ -150,6 +161,7 @@ export class UserController {
 			user.fullName = fullName;
 			user.egyptian = egyptian;
 			user.active = true;
+			req.session.active = user.active;
 			if (egyptian) {
 				egyptianInfo = new Egyptian();
 				egyptianInfo.nationalID = nationalID;
@@ -176,5 +188,22 @@ export class UserController {
 		return {
 			active: user.active,
 		};
-	}
+	};
+
+	verifySession = (
+		req: VerifySessionRequest,
+		res: Response
+	): VerifySessionResponed | boolean => {
+		const { savedSessionId } = req.body;
+		const sessionId = req.session.id;
+		if (savedSessionId === sessionId) {
+			res.status(200);
+			return {
+				id: req.session.userId,
+				email: req.session.email,
+				active: req.session.active,
+			};
+		}
+		return false;
+	};
 }

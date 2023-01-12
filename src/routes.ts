@@ -1,4 +1,5 @@
 import { body, ValidationChain } from "express-validator";
+import { TripController } from "./controllers/TripController";
 import { UserController } from "./controllers/UserController";
 
 type Method = "post" | "get";
@@ -6,7 +7,7 @@ type Method = "post" | "get";
 interface Route {
 	method: Method;
 	route: string;
-	controller: typeof UserController;
+	controller: typeof UserController | typeof TripController;
 	action: string;
 	validation: ValidationChain[];
 	isAuth?: boolean;
@@ -50,7 +51,8 @@ export const Routes: Route[] = [
 		validation: [
 			body("fullName").isLength({ min: 10 }).withMessage("Invalid Name"),
 			body("phoneNumber")
-				.isNumeric().withMessage("Invalid Phone Number")
+				.isNumeric()
+				.withMessage("Invalid Phone Number")
 				.isLength({ min: 11, max: 11 })
 				.withMessage("Short Phone Number"),
 			body("nationalID")
@@ -60,49 +62,37 @@ export const Routes: Route[] = [
 		],
 		isAuth: true,
 	},
+	{
+		method: "post",
+		route: "/verify-session",
+		controller: UserController,
+		action: "verifySession",
+		validation: [],
+	},
+	{
+		method: "post",
+		route: "/trips",
+		controller: TripController,
+		action: "insert",
+		validation: [
+			body("trainId").isNumeric(),
+			body("from").isLength({ min: 4 }),
+			body("to").isLength({ min: 4 }),
+			body("day").isNumeric().isLength({ max: 1 }),
+			body("departureTime").notEmpty(),
+			body("arrivalTime").notEmpty(),
+			body("price").notEmpty(),
+		],
+	},
+	{
+		method: "get",
+		route: "/search",
+		controller: TripController,
+		action: "searchTrip",
+		validation: [
+			body("from").notEmpty(),
+			body("to").notEmpty(),
+			body("goDate").notEmpty(),
+		],
+	},
 ];
-// export const Routes = [
-// 	{
-// 		method: "get",
-// 		route: "/users",
-// 		controller: UserController,
-// 		action: "all",
-// 		validation: [],
-// 	},
-// 	{
-// 		method: "get",
-// 		route: "/users/:id",
-// 		controller: UserController,
-// 		action: "one",
-// 		validation: [param("id").isInt()],
-// 	},
-// 	{
-// 		method: "post",
-// 		route: "/users",
-// 		controller: UserController,
-// 		action: "register",
-// 		validation: [
-// 			body("email").isEmail().withMessage("Invalid Email"),
-// 			body("password").isLength({ min: 8 }).withMessage("Short Password"),
-// 		],
-// 	},
-// 	{
-// 		method: "post",
-// 		route: "/user",
-// 		controller: UserController,
-// 		action: "login",
-// 		validation: [
-// 			body("email").isEmail().withMessage("Invalid Email"),
-// 			body("password")
-// 				.isLength({ min: 8 })
-// 				.withMessage("Invalid Passwords"),
-// 		],
-// 	},
-// 	{
-// 		method: "delete",
-// 		route: "/users/:id",
-// 		controller: UserController,
-// 		action: "remove",
-// 		validation: [param("id").isInt().withMessage("User does not exists")],
-// 	},
-// ];

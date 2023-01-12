@@ -11,6 +11,7 @@ import {
 } from "./config";
 import { Egyptian } from "./entities/Egyptian";
 import { NonEgyptian } from "./entities/NonEgyptian";
+import { Trip } from "./entities/Trip";
 import { User } from "./entities/User";
 
 export const AppDataSource = new DataSource({
@@ -22,7 +23,7 @@ export const AppDataSource = new DataSource({
 	database: dev_db_name,
 	synchronize: true,
 	logging: true,
-	entities: [User, Egyptian, NonEgyptian],
+	entities: [User, Egyptian, NonEgyptian, Trip],
 	subscribers: [],
 	migrations: [],
 });

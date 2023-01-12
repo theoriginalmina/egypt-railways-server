@@ -1,66 +1,65 @@
 import { Request } from "express";
 import session from "express-session";
 
-export interface CustomError {
+// Genral interfaces
+interface CustomError {
 	value?: string;
 	msg?: string;
 	param?: string;
 	location?: string;
 }
 
-export interface Failed {
-	errors?: CustomError[];
+// Requests
+export interface ExtendedSession extends Request {
+	session: session.Session &
+		Partial<session.SessionData> & {
+			userId: number;
+			email: string;
+			active: boolean;
+		};
 }
 
-export interface RegisterRequest extends Request {
+export interface UserRequest extends ExtendedSession {
 	body: {
 		email: string;
 		password: string;
 	};
 }
 
-export interface LoginRequest extends RegisterRequest {
-	session: session.Session &
-		Partial<session.SessionData> & {
-			userId: number;
-			email: string;
-		};
+export interface ActiveAccountRequest extends ExtendedSession {
+	body: {
+		fullName: string;
+		egyptian: boolean;
+		phoneNumber: string;
+		nationalID: string;
+		savedSessionId: string;
+	};
+}
+
+export interface VerifySessionRequest extends ExtendedSession {
+	body: {
+		savedSessionId: string;
+	};
+}
+
+// Responeds
+export interface Failed {
+	errors?: CustomError[];
 }
 
 export interface LoginSucceeded {
 	id: number;
 	email: string;
 	active: boolean;
-}
-
-export interface ActiveAccountRequest extends Request {
-	session: session.Session &
-		Partial<session.SessionData> & {
-			userId: number;
-			email: string;
-		};
-	body: {
-		fullName: string;
-		egyptian: boolean;
-		phoneNumber: string;
-		nationalID: string;
-	};
-}
-
-export interface ExpressRequest extends Request {
-	session: session.Session &
-		Partial<session.SessionData> & {
-			userId: number;
-			email: string;
-		};
-	body: {
-		fullName: string;
-		egyptian: boolean;
-		phoneNumber: string;
-		nationalID: string;
-	};
+	sessionId: string;
 }
 
 export interface ActiveAccountResponed {
+	active: boolean;
+}
+
+export interface VerifySessionResponed {
+	id: number;
+	email: string;
 	active: boolean;
 }

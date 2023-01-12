@@ -1,14 +1,15 @@
-import express, { NextFunction, Request, Response } from "express";
-import { validationResult } from "express-validator";
-import morgan from "morgan";
-import { Routes } from "./routes";
-import redis from "ioredis";
-import session from "express-session";
 import connectRedis from "connect-redis";
 import cors from "cors";
+import express, { NextFunction, Request, Response } from "express";
+import session from "express-session";
+import { validationResult } from "express-validator";
+import helmet from "helmet";
+import redis from "ioredis";
+import morgan from "morgan";
 import { cors_origin } from "./config";
+import { ExtendedSession } from "./interfaces";
 import { isAuth } from "./middlewares/isAuth";
-import { ExpressRequest } from "./interfaces";
+import { Routes } from "./routes";
 
 interface ResponseError extends Error {
 	statusCode?: number;
@@ -23,6 +24,7 @@ const RedisStore = connectRedis(session);
 const redisClient = redis.createClient();
 
 // Middlewares
+// app.use(helmet());
 app.use(morgan("tiny"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -62,7 +64,7 @@ Routes.forEach((route) => {
 	(app as any)[route.method](
 		route.route,
 		...route.validation,
-		async (req: ExpressRequest, res: Response, next: NextFunction) => {
+		async (req: ExtendedSession, res: Response, next: NextFunction) => {
 			if (route.isAuth) {
 				const auth = isAuth(req);
 				if (!auth) {
