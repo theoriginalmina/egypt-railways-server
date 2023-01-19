@@ -6,17 +6,49 @@ export class TripController {
 	private tripRepo = AppDataSource.getRepository(Trip);
 
 	insert = async (req: Request, res: Response) => {
-		const { trainId, from, to, day, departureTime, arrivalTime, price } =
-			req.body;
+		const {
+			trainId,
+			from,
+			to,
+			departureStation,
+			arrivalStation,
+			day,
+			departureTime,
+			arrivalTime,
+			price,
+		} = req.body;
+
+		const oneArr = departureTime.split(":");
+		const twoArr = arrivalTime.split(":");
+
+		const first = Number(oneArr[0]) * 60 + Number(oneArr[1]);
+		const second = Number(twoArr[0]) * 60 + Number(twoArr[1]);
+
+		let diff = second - first;
+
+		let hours = 0;
+		let minutes = 0;
+
+		while (diff >= 60) {
+			hours += 1;
+			diff -= 60;
+		}
+
+		minutes = diff;
+
+		const tripDuration = hours + "h" + minutes + "m";
 
 		try {
 			await this.tripRepo.insert({
 				trainId,
 				from,
 				to,
+				departureStation,
+				arrivalStation,
 				day,
 				departureTime,
 				arrivalTime,
+				tripDuration,
 				price,
 			});
 			res.status(200);
@@ -79,6 +111,30 @@ export class TripController {
 		return {
 			goTrips,
 		};
+	};
+
+	test = async (req: Request, res: Response) => {
+		const { one, two } = req.body;
+
+		const oneArr = one.split(":");
+		const twoArr = two.split(":");
+
+		const first = Number(oneArr[0]) * 60 + Number(oneArr[1]);
+		const second = Number(twoArr[0]) * 60 + Number(twoArr[1]);
+
+		let diff = second - first;
+
+		let hours = 0;
+		let minutes = 0;
+
+		while (diff >= 60) {
+			hours += 1;
+			diff -= 60;
+		}
+
+		minutes = diff;
+
+		console.log(hours, minutes);
 	};
 }
 

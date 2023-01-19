@@ -16,6 +16,12 @@ export class Trip {
 		to: string;
 
 	@Column()
+		departureStation: string;
+
+	@Column()
+		arrivalStation: string;
+
+	@Column()
 		day: number;
 
 	@Column({ type: "time" })
@@ -23,6 +29,9 @@ export class Trip {
 
 	@Column({ type: "time" })
 		arrivalTime: string;
+	
+	@Column()
+		tripDuration: string;
 
 	@Column({ type:"numeric" })
 		price: string;

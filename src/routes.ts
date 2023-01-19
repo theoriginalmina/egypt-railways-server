@@ -85,7 +85,7 @@ export const Routes: Route[] = [
 		],
 	},
 	{
-		method: "get",
+		method: "post",
 		route: "/search",
 		controller: TripController,
 		action: "searchTrip",
@@ -94,5 +94,12 @@ export const Routes: Route[] = [
 			body("to").notEmpty(),
 			body("goDate").notEmpty(),
 		],
+	},
+	{
+		method: "post",
+		route: "/test",
+		controller: TripController,
+		action: "test",
+		validation: [],
 	},
 ];
